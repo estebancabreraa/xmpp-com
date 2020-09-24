@@ -10,6 +10,7 @@ from Client import *
 
 
 import sys
+import time
 import logging
 import getpass
 from optparse import OptionParser
@@ -79,21 +80,21 @@ if __name__ == '__main__':
                 print(login)
 
                 username = input("Usuario: ")
-                password = input("Contraseña: ")
 
                 opts.jid = username + server
                 opts.password = getpass.getpass("Password: ")
 
                 xmpp = Client(opts.jid, opts.password)
-                #xmpp.register_plugin('xep_0077')
-                #xmpp.register_plugin('xep_0030') # Service Discovery
-                #xmpp.register_plugin('xep_0199') # XMPP Ping
-                #xmpp.register_plugin('xep_0045') # Multi-user chat
-                #xmpp.register_plugin('xep_0096')
-                #xmpp.register_plugin('xep_0065')
-                #xmpp.register_plugin('xep_0004')
+                xmpp.register_plugin('xep_0077')
+                xmpp.register_plugin('xep_0030') # Service Discovery
+                xmpp.register_plugin('xep_0199') # XMPP Ping
+                xmpp.register_plugin('xep_0045') # Multi-user chat
+                xmpp.register_plugin('xep_0096')
+                xmpp.register_plugin('xep_0065')
+                xmpp.register_plugin('xep_0004')
                 if xmpp.connect():
                     xmpp.process()
+                    time.sleep(5)
                     logged_in = True
                     print("Bienvenido/a ", username)
                 else:
@@ -103,7 +104,6 @@ if __name__ == '__main__':
                 print(register)
 
                 username = input("Usuario: ")
-                password = input("Contraseña: ")
 
                 opts.jid = username + server
                 opts.password = getpass.getpass("Password: ")
@@ -123,3 +123,10 @@ if __name__ == '__main__':
                 close = True
             else:
                 print("La opcion que ingreso no existe.")
+
+        else:
+            print(menu)
+
+            print (logged_menu)
+
+            opcion = input("Seleccione una opcion: ")
