@@ -5,8 +5,9 @@
 # @author: Esteban Cabrera Arevalo
 # @carnet: 17781
 
-import Register
-import Chat
+from Register import *
+from Chat import *
+
 
 import sys
 import logging
@@ -47,6 +48,9 @@ if __name__ == '__main__':
                         format='%(levelname)-8s %(message)s')
 
 
+    #Constantes
+    server = '@redes2020.xyz'
+
     #Variables de control
     logged_in = False
     close = False
@@ -68,8 +72,38 @@ if __name__ == '__main__':
 
                 username = input("Usuario: ")
                 password = input("Contraseña: ")
+
+                opts.jid = username + server
+                opts.password = password
+                xmpp = Chat(opts.jid, opts.password)
+                xmpp.register_plugin('xep_0030') # Service Discovery
+                xmpp.register_plugin('xep_0199') # XMPP Ping
+                xmpp.register_plugin('xep_0045') # Multi-user chat
+                if xmpp.connect():
+                    print("Bienvenido.")
+                else:
+                    print("error")
+                    
             elif (opcion == "2"):
                 print(register)
+
+                username = input("Usuario: ")
+                password = input("Contraseña: ")
+
+                opts.jid = username + server
+                opts.password = password
+
+                xmpp = Register(opts.jid, opts.password)
+                xmpp.register_plugin('xep_0030') # Service Discovery
+                xmpp.register_plugin('xep_0004') # Data forms
+                xmpp.register_plugin('xep_0066') # Out-of-band Data
+                xmpp.register_plugin('xep_0077') # In-band Registration
+                if xmpp.connect():
+                    xmpp.process(block=True)
+                    print("Done")
+                else:
+                    print("Unable to connect.")
+
             elif (opcion == "3"):
                 close = True
             else:
