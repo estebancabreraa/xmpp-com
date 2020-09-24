@@ -5,6 +5,8 @@ from optparse import OptionParser
 
 import sleekxmpp
 from sleekxmpp.exceptions import IqError, IqTimeout
+from sleekxmpp.xmlstream.stanzabase import ET, ElementBase
+from sleekxmpp.plugins.xep_0096 import stanza, File
 
 class Client(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
@@ -120,3 +122,44 @@ class Client(sleekxmpp.ClientXMPP):
         if msg['mucnick'] != self.nick:
             print(msg['mucroom'])
             print(msg['mucnick'], ': ',msg['body'])
+    
+    def show_Users(self):
+        iq_stanza = self.Iq()
+        iq_stanza['type'] = 'set'
+        iq_stanza['id'] = 'search_result'
+        iq_stanza['to'] = 'search.redes2020.xyz'
+        iq_stanza['from'] = self.boundjid.bare
+        que = ET.fromstring("<query xmlns='jabber:iq:search'> \
+                                <x xmlns='jabber:x:data' type='submit'> \
+                                    <field type='hidden' var='FORM_TYPE'> \
+                                        <value>jabber:iq:search</value> \
+                                    </field> \
+                                    <field var='Username'> \
+                                        <value>1</value> \
+                                    </field> \
+                                    <field var='search'> \
+                                        <value>*</value> \
+                                    </field> \
+                                </x> \
+                              </query>")
+        iq_stanza.append(que)
+        try:
+            users = iq_stanza.send()
+            cont = 0
+            data= []
+            users_info = []
+            for i in users.findall('.//{jabber:x:data}value'):
+                cont += 1
+                user_data = ''
+                if i.text != None:
+                    user_data = i.text
+                data.append(user_data)
+                if cont == 4:
+                    cont = 0
+                    users_info.append(data)
+                    data=[]
+            return users_info
+        except IqError as err:
+            print('No se pueden mostrar: %s' % err)
+        except IqTimeout:
+            print('No se recibe respeusta del servidor')

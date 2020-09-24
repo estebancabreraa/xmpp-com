@@ -62,7 +62,7 @@ if __name__ == '__main__':
     3. Salir'''
 
     logged_menu = '''\n
-    1.
+    1. Mostrar usuarios existentes.
     2.
     3.
     4.
@@ -130,3 +130,7 @@ if __name__ == '__main__':
             print (logged_menu)
 
             opcion = input("Seleccione una opcion: ")
+
+            if (opcion == "1"):
+                list_users = xmpp.show_Users()
+                print(list_users)
