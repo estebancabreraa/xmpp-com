@@ -6,7 +6,7 @@ from optparse import OptionParser
 import sleekxmpp
 from sleekxmpp.exceptions import IqError, IqTimeout
 
-class Chat(sleekxmpp.ClientXMPP):
+class Client(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 

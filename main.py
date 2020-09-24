@@ -6,7 +6,7 @@
 # @carnet: 17781
 
 from Register import *
-from Chat import *
+from Client import *
 
 
 import sys
@@ -74,13 +74,18 @@ if __name__ == '__main__':
                 password = input("Contraseña: ")
 
                 opts.jid = username + server
-                opts.password = password
-                xmpp = Chat(opts.jid, opts.password)
+                opts.password = getpass.getpass("Password: ")
+
+                xmpp = Client(opts.jid, opts.password)
+                xmpp.register_plugin('xep_0077')
                 xmpp.register_plugin('xep_0030') # Service Discovery
                 xmpp.register_plugin('xep_0199') # XMPP Ping
                 xmpp.register_plugin('xep_0045') # Multi-user chat
+                xmpp.register_plugin('xep_0096')
+                xmpp.register_plugin('xep_0065')
+                xmpp.register_plugin('xep_0004')
                 if xmpp.connect():
-                    print("Bienvenido.")
+                    print("Bienvenido/a ", username)
                 else:
                     print("error")
                     
@@ -91,7 +96,7 @@ if __name__ == '__main__':
                 password = input("Contraseña: ")
 
                 opts.jid = username + server
-                opts.password = password
+                opts.password = getpass.getpass("Password: ")
 
                 xmpp = Register(opts.jid, opts.password)
                 xmpp.register_plugin('xep_0030') # Service Discovery
