@@ -60,6 +60,14 @@ if __name__ == '__main__':
     2. Registrarse.
     3. Salir'''
 
+    logged_menu = '''\n
+    1.
+    2.
+    3.
+    4.
+    5.
+    6.'''
+
     print(header)
     while not (close):
         if not logged_in:
@@ -77,14 +85,16 @@ if __name__ == '__main__':
                 opts.password = getpass.getpass("Password: ")
 
                 xmpp = Client(opts.jid, opts.password)
-                xmpp.register_plugin('xep_0077')
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Multi-user chat
-                xmpp.register_plugin('xep_0096')
-                xmpp.register_plugin('xep_0065')
-                xmpp.register_plugin('xep_0004')
+                #xmpp.register_plugin('xep_0077')
+                #xmpp.register_plugin('xep_0030') # Service Discovery
+                #xmpp.register_plugin('xep_0199') # XMPP Ping
+                #xmpp.register_plugin('xep_0045') # Multi-user chat
+                #xmpp.register_plugin('xep_0096')
+                #xmpp.register_plugin('xep_0065')
+                #xmpp.register_plugin('xep_0004')
                 if xmpp.connect():
+                    xmpp.process()
+                    logged_in = True
                     print("Bienvenido/a ", username)
                 else:
                     print("error")
