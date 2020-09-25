@@ -8,6 +8,12 @@ from sleekxmpp.exceptions import IqError, IqTimeout
 from sleekxmpp.xmlstream.stanzabase import ET, ElementBase
 from sleekxmpp.plugins.xep_0096 import stanza, File
 
+import json
+from tabulate import tabulate #
+import base64
+
+from headers import notification
+
 class Client(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
@@ -46,13 +52,13 @@ class Client(sleekxmpp.ClientXMPP):
 
     def incoming_message(self, message):
         if message['type'] in ('chat','normal'):
-            print('Direct Message')
-            print(message['from'], message['body'])
+            print('\n', notification)
+            print('\nDe: ', message['from'], '\nMensaje:', message['body'])
 
     def logout(self):
         self.disconnect(wait=True)
 
-    def message(self, msg, recipient):
+    def snd_message(self, msg, recipient):
         self.send_presence()
         self.get_roster()
         self.send_message(mto=recipient,
@@ -64,21 +70,26 @@ class Client(sleekxmpp.ClientXMPP):
         self.get_roster()
         self.make_presence(pfrom=self.jid, pstatus=status)
 
-    def send_subscription(self, recipient):
+    def add_contact(self, recipient):
         self.send_presence_subscription(pto=recipient, ptype='subscribe')
 
     def show_contacts(self):
         self.send_presence()
         self.get_roster()
         self.client_roster
-        print("Contactos: ", self.client_roster.groups())
+        for line in self.client_roster.groups():
+            contacts_list = self.client_roster.groups()[line]
+        i = 1
+        for contact in contacts_list:
+            print(str(i), ". ", contact)
+            i = i + 1
 
     def remove_contact(self, jid):
         self.send_presence()
         self.get_roster()
         self.del_roster_item(jid)
 
-    def join_room(self, room, nick):
+    def join_chatRoom(self, room, nick):
         self.get_roster()
         self.send_presence()
         self.plugin['xep_0045'].joinMUC(room,
@@ -88,7 +99,7 @@ class Client(sleekxmpp.ClientXMPP):
                                         wait=True)
         self.add_event_handler("groupchat_message", self.muc_message)
 
-    def create_room(self, room, nick):
+    def create_chatRroom(self, room, nick):
         self.get_roster()
         self.send_presence()
         self.plugin['xep_0045'].joinMUC(room,
@@ -110,12 +121,14 @@ class Client(sleekxmpp.ClientXMPP):
                           mbody=msg,
                           mtype='groupchat')
 
-    def get_chatRooms(self):
+    def show_chatRooms(self):
         self.send_presence()
         self.get_roster()
         result = self.plugin['xep_0030'].get_items(jid='conference.redes2020.xyz')
+        i = 1
         for room in result['disco_items']:
-            print(room['jid'])
+            print(str(i), ". ", room['jid'])
+            i = i + 1
 
     def muc_message(self, msg):
         print("muc message")
@@ -161,5 +174,68 @@ class Client(sleekxmpp.ClientXMPP):
             return users_info
         except IqError as err:
             print('No se pueden mostrar: %s' % err)
+        except IqTimeout:
+            print('No se recibe respeusta del servidor')
+    
+    def receive_message(self, msg):
+        if str(msg['type']) == 'groupchat':
+            if msg['mucnick'] != self.nick:
+                print("\nNUEVA NOTIFICACION\nHA LLEGADO UN MENSAJE TIPO %s" % msg['type'])
+                table_info = []
+                table_info.append((str(msg['from']), str(msg['body'])))
+                table = tabulate(table_info, headers=['From', 'Message'], tablefmt='grid')
+                print(table)
+        elif str(msg['type']) == 'chat':
+            print("\nNUEVA NOTIFICACION\nHA LLEGADO UN MENSAJE TIPO %s" % msg['type'])
+            if len(msg['body']) > 3000:
+                image_rec = msg['body'].encode('utf-8')
+                image_rec = base64.decodebytes(image_rec)
+                with open("imagenrecibida.png", "wb") as fh:
+                    fh.write(image_rec)
+                print("Imagen recibida")
+            else:
+                table_info = []
+                table_info.append((str(msg['from']), str(msg['body'])))
+                table = tabulate(table_info, headers=['From', 'Message'], tablefmt='grid')
+                print(table)
+
+    def show_user(self, JID):
+        iq_stanza = self.Iq()
+        iq_stanza['type'] = 'set'
+        iq_stanza['id'] = 'search_result'
+        iq_stanza['to'] = 'search.redes2020.xyz'
+        iq_stanza['from'] = self.boundjid.bare
+        que = ET.fromstring("<query xmlns='jabber:iq:search'> \
+                                <x xmlns='jabber:x:data' type='submit'> \
+                                    <field type='hidden' var='FORM_TYPE'> \
+                                        <value>jabber:iq:search</value> \
+                                    </field> \
+                                    <field var='Username'> \
+                                        <value>1</value> \
+                                    </field> \
+                                    <field var='search'> \
+                                        <value>"+JID+"</value> \
+                                    </field> \
+                                </x> \
+                              </query>")
+        iq_stanza.append(que)
+        try:
+            users = iq_stanza.send()
+            cont = 0
+            data= []
+            users_info = []
+            for i in users.findall('.//{jabber:x:data}value'):
+                cont += 1
+                user_data = ''
+                if i.text != None:
+                    user_data = i.text
+                data.append(user_data)
+                if cont == 4:
+                    cont = 0
+                    users_info.append(data)
+                    data=[]
+            return users_info
+        except IqError as err:
+            print('Error al mostrar datos del usuario.')
         except IqTimeout:
             print('No se recibe respeusta del servidor')
