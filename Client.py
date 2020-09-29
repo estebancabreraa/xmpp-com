@@ -11,6 +11,7 @@ from sleekxmpp.plugins.xep_0096 import stanza, File
 import json
 from tabulate import tabulate #
 import base64
+import time
 
 from headers import notification
 
@@ -177,65 +178,14 @@ class Client(sleekxmpp.ClientXMPP):
         except IqTimeout:
             print('No se recibe respeusta del servidor')
     
-    def receive_message(self, msg):
-        if str(msg['type']) == 'groupchat':
-            if msg['mucnick'] != self.nick:
-                print("\nNUEVA NOTIFICACION\nHA LLEGADO UN MENSAJE TIPO %s" % msg['type'])
-                table_info = []
-                table_info.append((str(msg['from']), str(msg['body'])))
-                table = tabulate(table_info, headers=['From', 'Message'], tablefmt='grid')
-                print(table)
-        elif str(msg['type']) == 'chat':
-            print("\nNUEVA NOTIFICACION\nHA LLEGADO UN MENSAJE TIPO %s" % msg['type'])
-            if len(msg['body']) > 3000:
-                image_rec = msg['body'].encode('utf-8')
-                image_rec = base64.decodebytes(image_rec)
-                with open("imagenrecibida.png", "wb") as fh:
-                    fh.write(image_rec)
-                print("Imagen recibida")
-            else:
-                table_info = []
-                table_info.append((str(msg['from']), str(msg['body'])))
-                table = tabulate(table_info, headers=['From', 'Message'], tablefmt='grid')
-                print(table)
 
-    def show_user(self, JID):
-        iq_stanza = self.Iq()
-        iq_stanza['type'] = 'set'
-        iq_stanza['id'] = 'search_result'
-        iq_stanza['to'] = 'search.redes2020.xyz'
-        iq_stanza['from'] = self.boundjid.bare
-        que = ET.fromstring("<query xmlns='jabber:iq:search'> \
-                                <x xmlns='jabber:x:data' type='submit'> \
-                                    <field type='hidden' var='FORM_TYPE'> \
-                                        <value>jabber:iq:search</value> \
-                                    </field> \
-                                    <field var='Username'> \
-                                        <value>1</value> \
-                                    </field> \
-                                    <field var='search'> \
-                                        <value>"+JID+"</value> \
-                                    </field> \
-                                </x> \
-                              </query>")
-        iq_stanza.append(que)
-        try:
-            users = iq_stanza.send()
-            cont = 0
-            data= []
-            users_info = []
-            for i in users.findall('.//{jabber:x:data}value'):
-                cont += 1
-                user_data = ''
-                if i.text != None:
-                    user_data = i.text
-                data.append(user_data)
-                if cont == 4:
-                    cont = 0
-                    users_info.append(data)
-                    data=[]
-            return users_info
-        except IqError as err:
-            print('Error al mostrar datos del usuario.')
-        except IqTimeout:
-            print('No se recibe respeusta del servidor')
+    def delete_account(self):
+        iq_stanza = self.make_iq_set(ito='redes2020.xyz',ifrom=self.boundjid.user)
+        item = ET.fromstring("<query xmlns='jabber:iq:register'> \
+                                        <remove/> \
+                                    </query>")
+        iq_stanza.append(item)
+        ans = iq_stanza.send()
+        if ans['type'] == 'result':
+            print("Cuenta eliminada. Cerrando sesion...")
+        time.sleep(5)

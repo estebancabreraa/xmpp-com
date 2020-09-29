@@ -41,3 +41,4 @@ class Register(sleekxmpp.ClientXMPP):
         except IqTimeout:
             logging.error("No response from server.")
             self.disconnect()
+        

@@ -1,5 +1,5 @@
 ###########################################################################
-#                                Cliente XMPP                             #
+#                                XMPP Client                              #
 ###########################################################################
 
 # @author: Esteban Cabrera Arevalo
@@ -20,43 +20,47 @@ from headers import *
 
 if __name__ == '__main__':
     # Setup the command line arguments.
-    optp = OptionParser()
+    parser = OptionParser()
 
-    # Output verbosity options.
-    optp.add_option('-q', '--quiet', help='set logging to ERROR',
+    # Options: verbosity output.
+    parser.add_option('-q', '--quiet', help='set logging to ERROR',
                     action='store_const', dest='loglevel',
                     const=logging.ERROR, default=logging.INFO)
-    optp.add_option('-d', '--debug', help='set logging to DEBUG',
+    parser.add_option('-d', '--debug', help='set logging to DEBUG',
                     action='store_const', dest='loglevel',
                     const=logging.DEBUG, default=logging.INFO)
-    optp.add_option('-v', '--verbose', help='set logging to COMM',
+    parser.add_option('-v', '--verbose', help='set logging to COMM',
                     action='store_const', dest='loglevel',
                     const=5, default=logging.INFO)
 
     # JID and password options.
-    optp.add_option("-j", "--jid", dest="jid",
+    parser.add_option("-j", "--jid", dest="jid",
                     help="JID to use")
-    optp.add_option("-p", "--password", dest="password",
+    parser.add_option("-p", "--password", dest="password",
                     help="password to use")
-    optp.add_option("-r", "--room", dest="room",
+    parser.add_option("-r", "--room", dest="room",
                     help="MUC room to join")
-    optp.add_option("-n", "--nick", dest="nick",
+    parser.add_option("-n", "--nick", dest="nick",
                     help="MUC nickname")
 
-    opts, args = optp.parse_args()
+    opts, args = parser.parse_args()
 
     # Setup logging.
     logging.basicConfig(level=opts.loglevel,
                         format='%(levelname)-8s %(message)s')
 
 
-    #Constantes
+    #Constants: server info.
     server = '@redes2020.xyz'
     chat_format = "@conference.redes2020.xyz"
 
-    #Variables de control
+    #Control variables:
     logged_in = False
     close = False
+
+###########################################################################
+#                                 Menu Strings                            #
+###########################################################################
 
     default_menu = '''\n
     1. Login.
@@ -73,8 +77,14 @@ if __name__ == '__main__':
     7. Crear una sala de chat.
     8. Mensaje a una sala.
     10. Cerrar sesion.
-    11. Salir.
+    11. Cambiar cuenta.
+    12. Eliminar cuenta.
+    13. Salir.
     '''
+
+###########################################################################
+#                                     Program                             #
+###########################################################################
 
     print(header)
     while not (close):
@@ -92,10 +102,12 @@ if __name__ == '__main__':
                 opts.password = getpass.getpass("Password: ")
 
                 client = Client(opts.jid, opts.password)
+
+                #plugins for services, ping xmpp and multi-chat com.
                 client.register_plugin('xep_0077')
-                client.register_plugin('xep_0030') # Service Discovery
-                client.register_plugin('xep_0199') # XMPP Ping
-                client.register_plugin('xep_0045') # Multi-user chat
+                client.register_plugin('xep_0030')
+                client.register_plugin('xep_0199') 
+                client.register_plugin('xep_0045') 
                 client.register_plugin('xep_0096')
                 client.register_plugin('xep_0065')
                 client.register_plugin('xep_0004')
@@ -197,19 +209,55 @@ if __name__ == '__main__':
                 print(chatrooms)
                 chat_format = "@conference.redes2020.xyz"
 
-                chat_room = input("Ingrese el nombre de la sala para unirse: ")
+                chat_room = input("Ingrese el nombre de la sala: ")
                 chat_room = chat_room + chat_format
                 nick = input("Ingrese su apodo: ")
+                msg = input("Mensaje: ")
 
                 client.join_chatRoom(chat_room, nick)
+
+                client.snd_message(msg, chat_room)
                 
-                print("Te has unido a la sala indicada!")
+                print("Se ha enviado el mensaje correctamente!")
             if (opcion == "10"):
                 client.logout()
                 logged_in = False
                 print(goodbye)
                 print(menu)
             if (opcion == "11"):
+                client.logout()
+                print(login)
+
+                username = input("Usuario: ")
+
+                opts.jid = username + server
+                opts.password = getpass.getpass("Password: ")
+
+                client = Client(opts.jid, opts.password)
+
+                #plugins for services, ping xmpp and multi-chat com.
+                client.register_plugin('xep_0077')
+                client.register_plugin('xep_0030')
+                client.register_plugin('xep_0199') 
+                client.register_plugin('xep_0045') 
+                client.register_plugin('xep_0096')
+                client.register_plugin('xep_0065')
+                client.register_plugin('xep_0004')
+                if client.connect():
+                    client.process()
+                    time.sleep(5)
+                    logged_in = True
+                    print("Bienvenido/a ", username)
+                else:
+                    logged_in = False
+                    print("error")
+
+            if (opcion == "12"):
+                client.delete_account()
+                logged_in = False
+                print(goodbye)
+                print(menu)
+            if (opcion == "13"):
                 client.logout()
                 logged_in = False
                 close = True
