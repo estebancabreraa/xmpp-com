@@ -3,7 +3,7 @@
 
 Author: Esteban Cabrera.
 
-This is a python made xmpp client, wich is capable of creating accounts, logging in and out, instantly direct and group chatting, by  interacting with "redes2020.xyz" server
+This is a python made xmpp client, which is capable of creating accounts, logging in and out, instantly direct and group chatting, by  interacting with "redes2020.xyz" server
 
 **Setting it up**
 
